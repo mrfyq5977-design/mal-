@@ -6,7 +6,8 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
-import android.content.res.ColorStateList;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
@@ -30,198 +31,253 @@ public class MainActivity extends Activity {
     };
 
     int[] prices = {
-        5000,3000,2500,1500,4000,2000,3500,500,1000,1800,
-        2200,2000,1200,2500,700,3000,300,200,1000,500,
-        1500,500,5000,2000,800,1200,1500,2000,700,2500,
-        1000,500,800,3000,300,1500,2000,3500,2500,50000,
-        500,700,200,1000,5000,4000,1500,2500,5000,200,
-        800,3000,300,100,5000,7000,10000,1000,4000,12000
+        5000,3000,2500,1500,4000,
+        2000,3500,500,1000,1800,
+        2200,2000,1200,2500,700,
+        3000,300,200,1000,500,
+        1500,500,5000,2000,800,
+        1200,1500,2000,700,2500,
+        1000,500,800,3000,300,
+        1500,2000,3500,2500,50000,
+        500,700,200,1000,5000,
+        4000,1500,2500,5000,200,
+        800,3000,300,100,5000,
+        7000,10000,1000,4000,12000
     };
 
-    EditText input;
-    TextView result;
+    int[] quantities = new int[60];
 
     int green = Color.rgb(12, 75, 48);
     int gold = Color.rgb(232, 190, 85);
     int dark = Color.rgb(25, 49, 38);
 
-    GradientDrawable rounded(int color, int radius) {
-        GradientDrawable shape = new GradientDrawable();
-        shape.setColor(color);
-        shape.setCornerRadius(radius);
-        return shape;
+    EditText searchBox;
+    TextView totalText;
+    TextView cartText;
+    GridLayout productsGrid;
+
+    GradientDrawable shape(int color, int radius) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(radius);
+        return d;
     }
 
-    TextView makeText(String text, int size, int color) {
-        TextView view = new TextView(this);
-        view.setText(text);
-        view.setTextSize(size);
-        view.setTextColor(color);
-        return view;
+    TextView text(String value, int size, int color) {
+        TextView t = new TextView(this);
+        t.setText(value);
+        t.setTextSize(size);
+        t.setTextColor(color);
+        return t;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setStatusBarColor(Color.rgb(8, 53, 36));
-        getWindow().setNavigationBarColor(Color.rgb(8, 53, 36));
+        getWindow().setStatusBarColor(Color.rgb(7, 54, 38));
+        getWindow().setNavigationBarColor(Color.rgb(7, 54, 38));
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(24, 30, 24, 30);
-        layout.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
-
-        GradientDrawable background = new GradientDrawable(
+        LinearLayout page = new LinearLayout(this);
+        page.setOrientation(LinearLayout.VERTICAL);
+        page.setPadding(16, 20, 16, 20);
+        page.setBackground(new GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
             new int[] {
                 Color.rgb(7, 54, 38),
-                Color.rgb(15, 105, 68),
-                Color.rgb(3, 65, 48)
+                Color.rgb(18, 105, 68),
+                Color.rgb(5, 60, 43)
             }
-        );
-        layout.setBackground(background);
+        ));
 
-        TextView icon = makeText("🛒", 48, Color.WHITE);
-        icon.setGravity(Gravity.CENTER);
-        layout.addView(icon);
-
-        TextView title = makeText("أسعار البضائع", 30, gold);
-        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        TextView title = text("🛒 أسعار البضائع", 28, gold);
+        title.setTypeface(null, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
-        title.setPadding(0, 8, 0, 4);
-        layout.addView(title);
+        page.addView(title);
 
-        TextView subtitle = makeText(
-            "احسب قيمة مشترياتك بسهولة",
-            16,
-            Color.WHITE
+        TextView subtitle = text(
+            "جميع المنتجات وأسعارها",
+            16, Color.WHITE
         );
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, 0, 0, 28);
-        layout.addView(subtitle);
+        subtitle.setPadding(0, 8, 0, 18);
+        page.addView(subtitle);
 
-        TextView label = makeText("أدخل المنتجات", 18, gold);
-        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        label.setPadding(0, 0, 0, 10);
-        layout.addView(label);
+        searchBox = new EditText(this);
+        searchBox.setSingleLine(true);
+        searchBox.setTextSize(17);
+        searchBox.setTextColor(dark);
+        searchBox.setHintTextColor(Color.GRAY);
+        searchBox.setHint("🔍 ابحث عن منتج...");
+        searchBox.setPadding(16, 10, 16, 10);
+        searchBox.setBackground(shape(Color.WHITE, 18));
+        page.addView(searchBox);
 
-        input = new EditText(this);
-        input.setSingleLine(false);
-        input.setMinLines(2);
-        input.setTextSize(18);
-        input.setTextColor(dark);
-        input.setHintTextColor(Color.GRAY);
-        input.setHint("مثال: زيت سكر رز");
-        input.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
-        input.setPadding(18, 16, 18, 16);
-        input.setBackground(rounded(Color.WHITE, 22));
-        layout.addView(input);
-
-        TextView tip = makeText(
-            "اكتب أسماء المنتجات وافصل بينها بمسافة",
-            13,
-            Color.rgb(225, 241, 231)
+        TextView instruction = text(
+            "اضغط على المنتج لإضافته إلى الحساب",
+            14, Color.WHITE
         );
-        tip.setPadding(0, 10, 0, 20);
-        layout.addView(tip);
-
-        Button search = new Button(this);
-        search.setText("احسب المجموع");
-        search.setTextSize(18);
-        search.setTextColor(green);
-        search.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        search.setAllCaps(false);
-        search.setBackground(rounded(gold, 22));
-        search.setBackgroundTintList(null);
-        search.setPadding(10, 12, 10, 12);
-        layout.addView(search);
-
-        TextView resultTitle = makeText("تفاصيل الحساب", 20, gold);
-        resultTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        resultTitle.setPadding(0, 28, 0, 12);
-        layout.addView(resultTitle);
-
-        result = makeText(
-            "ستظهر هنا أسعار المنتجات والمجموع النهائي.",
-            17,
-            dark
-        );
-        result.setGravity(Gravity.RIGHT);
-        result.setPadding(18, 20, 18, 20);
-        result.setMinHeight(100);
-        result.setBackground(rounded(Color.WHITE, 20));
-        layout.addView(result);
-
-        TextView footer = makeText(
-            "أسعار البضائع • تسوّق بذكاء",
-            13,
-            Color.rgb(230, 222, 183)
-        );
-        footer.setGravity(Gravity.CENTER);
-        footer.setPadding(0, 28, 0, 8);
-        layout.addView(footer);
+        instruction.setPadding(0, 12, 0, 12);
+        page.addView(instruction);
 
         ScrollView scroll = new ScrollView(this);
-        scroll.setFillViewport(true);
-        scroll.setBackgroundColor(green);
-        scroll.addView(layout);
-        setContentView(scroll);
+        scroll.setFillViewport(false);
 
-        search.setOnClickListener(v -> calculate());
+        productsGrid = new GridLayout(this);
+        productsGrid.setColumnCount(2);
+        productsGrid.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
+        scroll.addView(productsGrid);
+
+        page.addView(scroll, new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, 0, 1
+        ));
+
+        LinearLayout summary = new LinearLayout(this);
+        summary.setOrientation(LinearLayout.VERTICAL);
+        summary.setPadding(14, 12, 14, 12);
+        summary.setBackground(shape(Color.WHITE, 18));
+
+        totalText = text("المجموع: 0 ريال", 20, green);
+        totalText.setTypeface(null, Typeface.BOLD);
+        summary.addView(totalText);
+
+        cartText = text("لم تختر أي منتج بعد", 14, dark);
+        cartText.setPadding(0, 8, 0, 4);
+        summary.addView(cartText);
+
+        Button clear = new Button(this);
+        clear.setText("مسح الحساب");
+        clear.setTextColor(green);
+        clear.setAllCaps(false);
+        clear.setBackgroundTintList(
+            android.content.res.ColorStateList.valueOf(gold)
+        );
+        summary.addView(clear);
+
+        page.addView(summary);
+
+        setContentView(page);
+
+        showProducts("");
+
+        searchBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(
+                CharSequence s, int start, int count, int after
+            ) {}
+
+            @Override
+            public void onTextChanged(
+                CharSequence s, int start, int before, int count
+            ) {
+                showProducts(s.toString().trim());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+        clear.setOnClickListener(v -> {
+            for (int i = 0; i < quantities.length; i++) {
+                quantities[i] = 0;
+            }
+            updateSummary();
+        });
     }
 
-    void calculate() {
-        String text = input.getText().toString().trim();
+    void showProducts(String query) {
+        productsGrid.removeAllViews();
 
-        if (text.isEmpty()) {
-            result.setText("اكتب اسم منتج أولاً.");
-            return;
+        int shown = 0;
+
+        for (int i = 0; i < names.length; i++) {
+            if (!names[i].contains(query)) continue;
+
+            final int index = i;
+            shown++;
+
+            LinearLayout card = new LinearLayout(this);
+            card.setOrientation(LinearLayout.VERTICAL);
+            card.setGravity(Gravity.CENTER);
+            card.setPadding(6, 12, 6, 12);
+            card.setBackground(shape(Color.WHITE, 16));
+            card.setClickable(true);
+            card.setFocusable(true);
+
+            TextView name = text(names[i], 17, green);
+            name.setTypeface(null, Typeface.BOLD);
+            name.setGravity(Gravity.CENTER);
+            card.addView(name);
+
+            TextView price = text(
+                String.format(Locale.getDefault(), "%,d ريال", prices[i]),
+                14, Color.rgb(155, 112, 20)
+            );
+            price.setGravity(Gravity.CENTER);
+            price.setPadding(0, 6, 0, 0);
+            card.addView(price);
+
+            TextView quantity = text(
+                "الكمية: " + quantities[i],
+                13, dark
+            );
+            quantity.setGravity(Gravity.CENTER);
+            quantity.setPadding(0, 5, 0, 0);
+            card.addView(quantity);
+
+            GridLayout.LayoutParams params =
+                new GridLayout.LayoutParams();
+
+            params.width = 0;
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+            params.columnSpec = GridLayout.spec(
+                GridLayout.UNDEFINED, 1f
+            );
+            params.setMargins(5, 5, 5, 5);
+
+            productsGrid.addView(card, params);
+
+            card.setOnClickListener(v -> {
+                quantities[index]++;
+                quantity.setText("الكمية: " + quantities[index]);
+                updateSummary();
+            });
         }
 
-        String[] items = text.split("\\s+");
-        int total = 0;
-        int count = 0;
-        StringBuilder output = new StringBuilder();
+        if (shown == 0) {
+            TextView empty = text(
+                "لم يتم العثور على المنتج",
+                17, Color.WHITE
+            );
+            empty.setPadding(12, 20, 12, 20);
+            productsGrid.addView(empty);
+        }
+    }
 
-        for (String item : items) {
-            if (item.equals("و")) continue;
+    void updateSummary() {
+        long total = 0;
+        StringBuilder selected = new StringBuilder();
 
-            if (item.startsWith("و") && item.length() > 1) {
-                item = item.substring(1);
-            }
+        for (int i = 0; i < names.length; i++) {
+            if (quantities[i] > 0) {
+                total += (long) prices[i] * quantities[i];
 
-            boolean found = false;
-
-            for (int i = 0; i < names.length; i++) {
-                if (item.equals(names[i])) {
-                    output.append(names[i])
-                          .append(": ")
-                          .append(prices[i])
-                          .append(" ريال\n");
-
-                    total += prices[i];
-                    count++;
-                    found = true;
-                    break;
-                }
-            }
-
-            if (!found) {
-                output.append("غير موجود: ")
-                      .append(item)
-                      .append("\n");
+                selected.append(names[i])
+                    .append(" × ")
+                    .append(quantities[i])
+                    .append("\n");
             }
         }
 
-        if (count > 0) {
-            output.append("\nعدد المنتجات: ")
-                  .append(count)
-                  .append("\nالمجموع: ")
-                  .append(total)
-                  .append(" ريال");
-        }
+        totalText.setText(String.format(
+            Locale.getDefault(),
+            "المجموع: %,d ريال", total
+        ));
 
-        result.setText(output.toString());
+        if (selected.length() == 0) {
+            cartText.setText("لم تختر أي منتج بعد");
+        } else {
+            cartText.setText(selected.toString());
+        }
     }
 }
