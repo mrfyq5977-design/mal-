@@ -4,6 +4,9 @@ package com.mal.prices;
 import android.app.Activity;
 import android.os.Bundle;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
+import android.content.res.ColorStateList;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.*;
@@ -38,47 +41,130 @@ public class MainActivity extends Activity {
     EditText input;
     TextView result;
 
+    int green = Color.rgb(12, 75, 48);
+    int gold = Color.rgb(232, 190, 85);
+    int dark = Color.rgb(25, 49, 38);
+
+    GradientDrawable rounded(int color, int radius) {
+        GradientDrawable shape = new GradientDrawable();
+        shape.setColor(color);
+        shape.setCornerRadius(radius);
+        return shape;
+    }
+
+    TextView makeText(String text, int size, int color) {
+        TextView view = new TextView(this);
+        view.setText(text);
+        view.setTextSize(size);
+        view.setTextColor(color);
+        return view;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        getWindow().setStatusBarColor(Color.rgb(8, 53, 36));
+        getWindow().setNavigationBarColor(Color.rgb(8, 53, 36));
+
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(28, 28, 28, 28);
-        layout.setBackgroundColor(Color.rgb(245, 247, 250));
+        layout.setPadding(24, 30, 24, 30);
+        layout.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
 
-        TextView title = new TextView(this);
-        title.setText("أسعار البضائع");
-        title.setTextSize(28);
-        title.setTextColor(Color.rgb(20, 70, 130));
+        GradientDrawable background = new GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            new int[] {
+                Color.rgb(7, 54, 38),
+                Color.rgb(15, 105, 68),
+                Color.rgb(3, 65, 48)
+            }
+        );
+        layout.setBackground(background);
+
+        TextView icon = makeText("🛒", 48, Color.WHITE);
+        icon.setGravity(Gravity.CENTER);
+        layout.addView(icon);
+
+        TextView title = makeText("أسعار البضائع", 30, gold);
+        title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         title.setGravity(Gravity.CENTER);
+        title.setPadding(0, 8, 0, 4);
         layout.addView(title);
 
-        TextView hint = new TextView(this);
-        hint.setText("اكتب أسماء المنتجات مفصولة بمسافة");
-        hint.setTextSize(16);
-        hint.setGravity(Gravity.CENTER);
-        hint.setPadding(0, 20, 0, 12);
-        layout.addView(hint);
+        TextView subtitle = makeText(
+            "احسب قيمة مشترياتك بسهولة",
+            16,
+            Color.WHITE
+        );
+        subtitle.setGravity(Gravity.CENTER);
+        subtitle.setPadding(0, 0, 0, 28);
+        layout.addView(subtitle);
+
+        TextView label = makeText("أدخل المنتجات", 18, gold);
+        label.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        label.setPadding(0, 0, 0, 10);
+        layout.addView(label);
 
         input = new EditText(this);
         input.setSingleLine(false);
-        input.setHint("مثال: زيت سكر رز");
+        input.setMinLines(2);
         input.setTextSize(18);
-        input.setGravity(Gravity.RIGHT);
+        input.setTextColor(dark);
+        input.setHintTextColor(Color.GRAY);
+        input.setHint("مثال: زيت سكر رز");
+        input.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
+        input.setPadding(18, 16, 18, 16);
+        input.setBackground(rounded(Color.WHITE, 22));
         layout.addView(input);
 
+        TextView tip = makeText(
+            "اكتب أسماء المنتجات وافصل بينها بمسافة",
+            13,
+            Color.rgb(225, 241, 231)
+        );
+        tip.setPadding(0, 10, 0, 20);
+        layout.addView(tip);
+
         Button search = new Button(this);
-        search.setText("اعرض السعر");
+        search.setText("احسب المجموع");
+        search.setTextSize(18);
+        search.setTextColor(green);
+        search.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        search.setAllCaps(false);
+        search.setBackground(rounded(gold, 22));
+        search.setBackgroundTintList(null);
+        search.setPadding(10, 12, 10, 12);
         layout.addView(search);
 
-        result = new TextView(this);
-        result.setTextSize(18);
-        result.setTextColor(Color.BLACK);
-        result.setPadding(0, 24, 0, 0);
+        TextView resultTitle = makeText("تفاصيل الحساب", 20, gold);
+        resultTitle.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+        resultTitle.setPadding(0, 28, 0, 12);
+        layout.addView(resultTitle);
+
+        result = makeText(
+            "ستظهر هنا أسعار المنتجات والمجموع النهائي.",
+            17,
+            dark
+        );
+        result.setGravity(Gravity.RIGHT);
+        result.setPadding(18, 20, 18, 20);
+        result.setMinHeight(100);
+        result.setBackground(rounded(Color.WHITE, 20));
         layout.addView(result);
 
+        TextView footer = makeText(
+            "أسعار البضائع • تسوّق بذكاء",
+            13,
+            Color.rgb(230, 222, 183)
+        );
+        footer.setGravity(Gravity.CENTER);
+        footer.setPadding(0, 28, 0, 8);
+        layout.addView(footer);
+
         ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.setBackgroundColor(green);
         scroll.addView(layout);
         setContentView(scroll);
 
@@ -113,6 +199,7 @@ public class MainActivity extends Activity {
                           .append(": ")
                           .append(prices[i])
                           .append(" ريال\n");
+
                     total += prices[i];
                     count++;
                     found = true;
@@ -122,13 +209,16 @@ public class MainActivity extends Activity {
 
             if (!found) {
                 output.append("غير موجود: ")
-                      .append(item).append("\n");
+                      .append(item)
+                      .append("\n");
             }
         }
 
         if (count > 0) {
-            output.append("\nعدد المنتجات: ").append(count)
-                  .append("\nالمجموع: ").append(total)
+            output.append("\nعدد المنتجات: ")
+                  .append(count)
+                  .append("\nالمجموع: ")
+                  .append(total)
                   .append(" ريال");
         }
 
